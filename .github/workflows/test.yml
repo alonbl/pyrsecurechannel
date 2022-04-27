@@ -1,0 +1,110 @@
+---
+name: test
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  static:
+    name: static
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: dependencies
+      run: |
+        sudo apt install -y \
+              pycodestyle \
+              pylint \
+              python3-mypy
+    - name: scan
+      run: |
+        ./static.sh
+  T-local:
+    name: T-local
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: run
+      run: |
+        ./test1.sh
+
+  P-T-pip:
+    name: P-T-pip
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: dependencies
+      run: |
+        sudo apt install -y \
+              python3-setuptools \
+              python3-pip
+    - name: package
+      run: |
+        git ls-files | sort > /tmp/a1
+        ./setup.py sdist
+        tar -tf dist/pyrsecurechannel-*.tar.gz | sed 's#^[^/]*/##' | sort > /tmp/a2
+        ! diff -urNp /tmp/a1 /tmp/a2 | grep -v '^---' | grep '^-'
+        ./setup.py bdist_wheel
+    - name: install
+      run: |
+        pip3 install dist/*.whl
+    - name: run
+      run: |
+        rm -fr pyrloopclient pyrsecurechannel
+        python3 -m pyrsecurechannel --config=test1.conf &
+        pid=$!
+        sleep 1
+        python3 -m pyrloopclient --host=localhost --port=8002
+        python3 -m pyrloopclient --host=localhost --port=8012
+        kill $pid
+        wait $pid
+
+  B-P-T-ubuntu:
+    name: B-P-T-ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: dependencies
+      run: |
+        sudo apt install -y \
+              devscripts \
+              equivs
+    - name: dependencies
+      run: |
+        sudo mk-build-deps -i --tool="apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends"
+    - name: build
+      run: |
+        debuild -b -uc -us -i
+    - name: install
+      run: |
+        sudo dpkg -i ../*.deb
+    - name: test
+      run: |
+        rm -fr pyrloopclient pyrsecurechannel
+        python3 -m pyrsecurechannel --config=test1.conf &
+        pid=$!
+        sleep 1
+        python3 -m pyrloopclient --host=localhost --port=8002
+        python3 -m pyrloopclient --host=localhost --port=8012
+        kill $pid
+        wait $pid
+
+  T-windows:
+    name: T-windows
+    runs-on: windows-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: test
+      run: |
+        .\test1.ps1

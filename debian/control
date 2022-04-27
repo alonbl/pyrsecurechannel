@@ -1,0 +1,16 @@
+Source: pyrsecurechannel
+Section: utils
+Priority: optional
+Maintainer: Alon Bar-Lev <alon.barlev@gmail.com>
+Build-Depends: debhelper (>=11~), dh-python, python3-all, python3-setuptools
+Standards-Version: 4.1.4
+Homepage: https://github.com/alonbl/pyrsecurechannel
+X-Python3-Version: >= 3.8
+
+package: pyrsecurechannel
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${python3:Depends}
+Description: Python based secure channel
+ .
+ Python secure channel simple implementation.

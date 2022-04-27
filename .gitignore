@@ -1,0 +1,17 @@
+*.deb
+*.egg-info
+*.old
+*.pyc
+*.swp
+*.temp
+.mypy_cache
+.pybuild
+.rnd
+__pycache__
+build
+debian/.debhelper
+debian/debhelper-build-stamp
+debian/files
+debian/pyrsecurechannel*
+dist
+pki-root/pki/safessl-easyrsa.cnf

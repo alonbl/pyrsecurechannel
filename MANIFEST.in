@@ -1,0 +1,19 @@
+include .codespell-ignore-words
+include .gitattributes
+include .gitignore
+include .pycodestyle
+include .pylintrc
+include COPYING
+include debian/changelog
+include debian/compat
+include debian/control
+include debian/copyright
+include debian/rules
+include setup-pki.sh
+include static.sh
+include test1.conf
+include test1.md
+include test1.ps1
+include test1.sh
+recursive-include .github *
+recursive-include pki-root *
