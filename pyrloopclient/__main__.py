@@ -7,26 +7,26 @@ import time
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description='pyloopclient')
+    parser = argparse.ArgumentParser(description="pyloopclient")
     parser.add_argument(
-        '--host',
-        metavar='HOST',
-        default='',
-        help='Host address',
+        "--host",
+        metavar="HOST",
+        default="",
+        help="Host address",
     )
     parser.add_argument(
-        '--port',
-        metavar='PORT',
+        "--port",
+        metavar="PORT",
         type=int,
         required=True,
-        help='Host port',
+        help="Host port",
     )
     parser.add_argument(
-        '--iter',
-        metavar='N',
+        "--iter",
+        metavar="N",
         type=int,
         default=10,
-        help='Number of iterations (%(default)s)',
+        help="Number of iterations (%(default)s)",
     )
     args = parser.parse_args()
 
@@ -45,14 +45,14 @@ def main() -> None:
             while len(buf) < len(gold):
                 tmp = sock.recv(len(gold) - len(buf))
                 if not tmp:
-                    raise RuntimeError('Unexpected disconnect')
+                    raise RuntimeError("Unexpected disconnect")
                 buf += tmp
             if buf != gold:
-                raise RuntimeError('Corruption')
+                raise RuntimeError("Corruption")
             count += len(buf)
     end = time.time()
-    print(f'Throughput: {(count/(end-start)):,.2f}Bps')
+    print(f"Throughput: {(count/(end-start)):,.2f}Bps")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
