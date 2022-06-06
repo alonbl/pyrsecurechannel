@@ -34,15 +34,15 @@ class PrintableError(RuntimeError):
 
 class ContextFilter(logging.Filter):  # pylint: disable=too-few-public-methods
     def __init__(
-            self,
-            attrs: typing.Sequence[str],
+        self,
+        attrs: typing.Sequence[str],
     ):
         super().__init__()
         self._attrs = attrs
 
     def filter(
-            self,
-            record: logging.LogRecord,
+        self,
+        record: logging.LogRecord,
     ) -> bool:
         for attr in self._attrs:
             if not getattr(record, attr, None):
@@ -50,17 +50,16 @@ class ContextFilter(logging.Filter):  # pylint: disable=too-few-public-methods
         return True
 
 
-class Channel():  # pylint: disable=too-few-public-methods
-
+class Channel:  # pylint: disable=too-few-public-methods
     class Type(enum.Enum):
         LOOPBACK = enum.auto()
         PROXY = enum.auto()
 
-    CHUNK_SIZE = 10*1024
+    CHUNK_SIZE = 10 * 1024
 
     def __init__(
-            self,
-            channel: str,
+        self,
+        channel: str,
     ):
         self._logger = logging.LoggerAdapter(
             logging.getLogger("pyrsc.channel"),
@@ -70,8 +69,8 @@ class Channel():  # pylint: disable=too-few-public-methods
         )
 
     def _dump_writer(
-            self,
-            writer: asyncio.StreamWriter,
+        self,
+        writer: asyncio.StreamWriter,
     ) -> None:
         if self._logger.isEnabledFor(logging.DEBUG):
             self._logger.debug("writer: %r", writer)
@@ -80,51 +79,75 @@ class Channel():  # pylint: disable=too-few-public-methods
 
     @staticmethod
     def _get_writer_info(
-            writer: asyncio.StreamWriter,
+        writer: asyncio.StreamWriter,
     ) -> str:
-        sockname: typing.Optional[typing.Tuple[typing.Any]] = writer.get_extra_info("sockname")
-        peername: typing.Optional[typing.Tuple[typing.Any]] = writer.get_extra_info("peername")
-        peercert: typing.Optional[typing.Dict[str, typing.Any]] = writer.get_extra_info("peercert")
-        return "".join((
-            f"local.socket={':'.join((str(x) for x in sockname))} " if sockname else "",
-            f"peer.socket={':'.join((str(x) for x in peername))} " if peername else "",
-            "peer.subject={subj} peer.san={san} ".format(  # pylint: disable=consider-using-f-string
-                subj=", ".join((", ".join(("=".join(y) for y in x)) for x in peercert.get("subject", ()))),
-                san=", ".join((":".join(x) for x in peercert.get("subjectAltName", ()))),
-            ) if peercert else "",
-        ))
+        sockname: typing.Optional[typing.Tuple[typing.Any]] = writer.get_extra_info(
+            "sockname"
+        )
+        peername: typing.Optional[typing.Tuple[typing.Any]] = writer.get_extra_info(
+            "peername"
+        )
+        peercert: typing.Optional[typing.Dict[str, typing.Any]] = writer.get_extra_info(
+            "peercert"
+        )
+        return "".join(
+            (
+                f"local.socket={':'.join((str(x) for x in sockname))} "
+                if sockname
+                else "",
+                f"peer.socket={':'.join((str(x) for x in peername))} "
+                if peername
+                else "",
+                "peer.subject={subj} peer.san={san} ".format(  # pylint: disable=consider-using-f-string
+                    subj=", ".join(
+                        (
+                            ", ".join(("=".join(y) for y in x))
+                            for x in peercert.get("subject", ())
+                        )
+                    ),
+                    san=", ".join(
+                        (":".join(x) for x in peercert.get("subjectAltName", ()))
+                    ),
+                )
+                if peercert
+                else "",
+            )
+        )
 
     @staticmethod
     def _verify_peer(
-            writer: asyncio.StreamWriter,
-            client_name: str,
+        writer: asyncio.StreamWriter,
+        client_name: str,
     ) -> None:
         if client_name:
             peercert = writer.get_extra_info("peercert")
             if not peercert:
                 raise PrintableError("Expected peer certificate")
             if tuple(client_name.split(":", 1)) not in peercert["subjectAltName"]:
-                raise PrintableError(f"Expected peer name mismatch, expected {client_name} actual {{peer}}".format(
-                    peer=", ".join((":".join(x) for x in peercert.get("subjectAltName", ()))),
-                ))
+                raise PrintableError(
+                    f"Expected peer name mismatch, expected {client_name} actual {{peer}}".format(
+                        peer=", ".join(
+                            (":".join(x) for x in peercert.get("subjectAltName", ()))
+                        ),
+                    )
+                )
 
 
 class LoopbackChannel(Channel):  # pylint: disable=too-few-public-methods
-
     def __init__(
-            self,
-            channel: str,
-            server_args: typing.Dict[str, typing.Any],
-            client_name: str,
+        self,
+        channel: str,
+        server_args: typing.Dict[str, typing.Any],
+        client_name: str,
     ):
         super().__init__(channel)
         self._server_args = server_args
         self._client_name = client_name
 
     async def _handler(
-            self,
-            reader: asyncio.StreamReader,
-            _writer: asyncio.StreamWriter,
+        self,
+        reader: asyncio.StreamReader,
+        _writer: asyncio.StreamWriter,
     ) -> None:
         try:
             with contextlib.closing(_writer) as writer:
@@ -142,7 +165,9 @@ class LoopbackChannel(Channel):  # pylint: disable=too-few-public-methods
         except Exception as ex:  # pylint: disable=broad-except
             self._logger.warning(ex, exc_info=True)
 
-    def create(self) -> typing.Coroutine[typing.Any, typing.Any, asyncio.AbstractServer]:
+    def create(
+        self,
+    ) -> typing.Coroutine[typing.Any, typing.Any, asyncio.AbstractServer]:
         return asyncio.start_server(
             self._handler,
             **self._server_args,
@@ -150,13 +175,12 @@ class LoopbackChannel(Channel):  # pylint: disable=too-few-public-methods
 
 
 class ProxyChannel(Channel):  # pylint: disable=too-few-public-methods
-
     def __init__(
-            self,
-            channel: str,
-            server_args: typing.Dict[str, typing.Any],
-            client_name: str,
-            connect_args: typing.Dict[str, typing.Any],
+        self,
+        channel: str,
+        server_args: typing.Dict[str, typing.Any],
+        client_name: str,
+        connect_args: typing.Dict[str, typing.Any],
     ):
         super().__init__(channel)
         self._server_args = server_args
@@ -164,9 +188,9 @@ class ProxyChannel(Channel):  # pylint: disable=too-few-public-methods
         self._connect_args = connect_args
 
     async def _pipe(
-            self,
-            reader: asyncio.StreamReader,
-            _writer: asyncio.StreamWriter,
+        self,
+        reader: asyncio.StreamReader,
+        _writer: asyncio.StreamWriter,
     ) -> None:
         try:
             with contextlib.closing(_writer) as writer:
@@ -176,9 +200,9 @@ class ProxyChannel(Channel):  # pylint: disable=too-few-public-methods
             self._logger.warning(ex, exc_info=True)
 
     async def _handler(
-            self,
-            reader: asyncio.StreamReader,
-            _writer: asyncio.StreamWriter,
+        self,
+        reader: asyncio.StreamReader,
+        _writer: asyncio.StreamWriter,
     ) -> None:
         try:
             with contextlib.closing(_writer) as writer:
@@ -188,7 +212,9 @@ class ProxyChannel(Channel):  # pylint: disable=too-few-public-methods
                 self._logger.info("%-10s: %s", "accept", info)
                 self._verify_peer(writer, self._client_name)
 
-                (remote_reader, remote_writer) = await asyncio.open_connection(**self._connect_args)
+                (remote_reader, remote_writer) = await asyncio.open_connection(
+                    **self._connect_args
+                )
                 self._dump_writer(remote_writer)
                 remote_info = self._get_writer_info(remote_writer)
                 self._logger.info("%-10s: %s", "connected", remote_info)
@@ -205,7 +231,9 @@ class ProxyChannel(Channel):  # pylint: disable=too-few-public-methods
         except Exception as ex:  # pylint: disable=broad-except
             self._logger.warning(ex, exc_info=True)
 
-    def create(self) -> typing.Coroutine[typing.Any, typing.Any, asyncio.AbstractServer]:
+    def create(
+        self,
+    ) -> typing.Coroutine[typing.Any, typing.Any, asyncio.AbstractServer]:
         return asyncio.start_server(
             self._handler,
             **self._server_args,
@@ -216,18 +244,24 @@ _SPLIT_COMMA = re.compile(r"\s*,\s*")
 
 
 def _split_comma(
-        s: str,  # pylint: disable=invalid-name
+    s: str,  # pylint: disable=invalid-name
 ) -> typing.List[str]:
     return _SPLIT_COMMA.split(s.strip())
 
 
 def _setup_log(
-        args: argparse.Namespace,
-        config: configparser.ConfigParser,
+    args: argparse.Namespace,
+    config: configparser.ConfigParser,
 ) -> None:
     handler = logging.StreamHandler()
     if args.log_file:
-        handler.setStream(open(args.log_file, "a", encoding="utf-8"))  # pylint: disable=consider-using-with
+        handler.setStream(
+            open(  # pylint: disable=consider-using-with
+                args.log_file,
+                "a",
+                encoding="utf-8",
+            )
+        )
     handler.setLevel(logging.DEBUG)
     handler.setFormatter(
         logging.Formatter(
@@ -246,7 +280,7 @@ def _setup_log(
 
 
 def _setup_argparser(
-        distribution: importlib.metadata.Distribution
+    distribution: importlib.metadata.Distribution,
 ) -> argparse.ArgumentParser:
 
     # TODO: remove python-3.10
@@ -289,8 +323,8 @@ def _setup_argparser(
 
 
 def _get_ssl_ctx(
-        section: configparser.SectionProxy,
-        purpose: ssl.Purpose,
+    section: configparser.SectionProxy,
+    purpose: ssl.Purpose,
 ) -> typing.Optional[ssl.SSLContext]:
 
     ssl_ctx: typing.Optional[ssl.SSLContext] = None
@@ -308,15 +342,21 @@ def _get_ssl_ctx(
         ssl_ctx.check_hostname = True
         ssl_ctx.hostname_checks_common_name = False
         if "verify_mode" in section:
-            ssl_ctx.verify_mode = ssl.VerifyMode[  # pylint: disable=no-member # pylint bug
-                section["verify_mode"]
-            ]
+            ssl_ctx.verify_mode = (
+                ssl.VerifyMode[  # pylint: disable=no-member # pylint bug
+                    section["verify_mode"]
+                ]
+            )
         if "verify_flags" in section:
-            ssl_ctx.verify_flags = ssl.VerifyFlags.VERIFY_DEFAULT  # pylint: disable=no-member # pylint bug
+            ssl_ctx.verify_flags = (
+                ssl.VerifyFlags.VERIFY_DEFAULT  # pylint: disable=no-member # pylint bug
+            )
             for flag in _split_comma(section["verify_flags"]):
-                ssl_ctx.verify_flags |= ssl.VerifyFlags[  # pylint: disable=no-member # pylint bug
-                    flag
-                ] if flag else 0
+                ssl_ctx.verify_flags |= (
+                    ssl.VerifyFlags[flag]  # pylint: disable=no-member # pylint bug
+                    if flag
+                    else 0
+                )
         if "ciphers" in section:
             ssl_ctx.set_ciphers(section["ciphers"])
         ssl_ctx.keylog_filename = section.get("sslkeylogfile")
@@ -325,7 +365,7 @@ def _get_ssl_ctx(
 
 
 def _get_server_args(
-        section: configparser.SectionProxy,
+    section: configparser.SectionProxy,
 ) -> typing.Dict[str, typing.Any]:
     return dict(
         server_args=dict(
@@ -342,17 +382,16 @@ def _get_server_args(
 
 
 def _get_connect_args(
-        section: configparser.SectionProxy,
+    section: configparser.SectionProxy,
 ) -> typing.Dict[str, typing.Any]:
     return dict(
         connect_args=dict(
             host=section.get("host", "localhost"),
             port=section.getint("port"),
             flags=socket.SOCK_STREAM,
-            local_addr=(
-                section["bind_addr"],
-                section["bind_port"]
-            ) if "bind_addr" in section else None,
+            local_addr=(section["bind_addr"], section["bind_port"])
+            if "bind_addr" in section
+            else None,
             ssl=_get_ssl_ctx(
                 section=section,
                 purpose=ssl.Purpose.SERVER_AUTH,
@@ -391,7 +430,11 @@ def main() -> None:  # pylint: disable=too-many-statements
 
             servers: typing.Dict[str, asyncio.AbstractServer] = {}
 
-            for channel in args.channel if args.channel else _split_comma(config.get("global", "channels")):
+            for channel in (
+                args.channel
+                if args.channel
+                else _split_comma(config.get("global", "channels"))
+            ):
                 channel_section = config[channel]
 
                 stype = Channel.Type[channel_section.get("type", "none").upper()]
@@ -415,7 +458,9 @@ def main() -> None:  # pylint: disable=too-many-statements
                         ).create()
                     )
                 else:
-                    raise PrintableError(f"Invalid channel type '{stype}' in '{channel}'")
+                    raise PrintableError(
+                        f"Invalid channel type '{stype}' in '{channel}'"
+                    )
 
             logger.debug("Servers: %r", servers)
             try:

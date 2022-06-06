@@ -16,6 +16,7 @@ jobs:
     - name: dependencies
       run: |
         sudo apt install -y \
+              black \
               pycodestyle \
               pylint \
               python3-mypy

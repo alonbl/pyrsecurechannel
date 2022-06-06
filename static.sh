@@ -10,6 +10,7 @@ die() {
 
 MODULES="pyrsecurechannel pyrloopclient"
 
+black . || die "black"
 pycodestyle . || die "pycodestyle"
 pylint ${MODULES} || die "pylint"
 python3 -m mypy ${MODULES} || die "mypy"
