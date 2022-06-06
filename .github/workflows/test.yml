@@ -8,7 +8,7 @@ on:
 jobs:
   static:
     name: static
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: checkout
@@ -24,7 +24,7 @@ jobs:
         ./static.sh
   T-local:
     name: T-local
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: checkout
@@ -35,7 +35,7 @@ jobs:
 
   P-T-pip:
     name: P-T-pip
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: checkout
@@ -68,7 +68,7 @@ jobs:
 
   B-P-T-ubuntu:
     name: B-P-T-ubuntu
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: checkout

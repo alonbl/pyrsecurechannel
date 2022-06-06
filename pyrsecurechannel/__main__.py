@@ -17,7 +17,6 @@ import typing
 
 
 # pylint no-member: https://github.com/PyCQA/pylint/issues/2422
-# mypy _SSLContext: https://github.com/python/typeshed/issues/1630  # TODO: remove ubuntu-22.04
 
 
 LOG_LEVELS: typing.Dict[str, int] = {
@@ -216,8 +215,8 @@ class ProxyChannel(Channel):  # pylint: disable=too-few-public-methods
 _SPLIT_COMMA = re.compile(r'\s*,\s*')
 
 
-def _split_comma(  # pylint: disable=invalid-name # TODO: ubuntu-22.04 move to 's' line
-        s: str,
+def _split_comma(
+        s: str,  # pylint: disable=invalid-name
 ) -> typing.List[str]:
     return _SPLIT_COMMA.split(s.strip())
 
@@ -307,7 +306,7 @@ def _get_ssl_ctx(
             ssl_ctx.load_dh_params(section['dhfile'])
         ssl_ctx.load_verify_locations(capath=section.get('capath'))
         ssl_ctx.check_hostname = True
-        ssl_ctx.hostname_checks_common_name = False  # type: ignore # TODO: remove ubuntu-22.04
+        ssl_ctx.hostname_checks_common_name = False
         if 'verify_mode' in section:
             ssl_ctx.verify_mode = ssl.VerifyMode[  # pylint: disable=no-member # pylint bug
                 section['verify_mode']
@@ -320,7 +319,7 @@ def _get_ssl_ctx(
                 ] if flag else 0
         if 'ciphers' in section:
             ssl_ctx.set_ciphers(section['ciphers'])
-        ssl_ctx.keylog_filename = section.get('sslkeylogfile')  # type: ignore # TODO: remove ubuntu-22.04
+        ssl_ctx.keylog_filename = section.get('sslkeylogfile')
 
     return ssl_ctx
 
@@ -402,7 +401,7 @@ def main() -> None:  # pylint: disable=too-many-statements
                     server_section = config[channel_section['proxy.server']]
 
                     servers[server_key] = loop.run_until_complete(
-                        ProxyChannel(  # type: ignore  # TODO: remove ubuntu-22.04
+                        ProxyChannel(
                             channel=channel,
                             **_get_server_args(server_section),
                             **_get_connect_args(client_section),
