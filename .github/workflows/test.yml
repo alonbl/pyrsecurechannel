@@ -17,6 +17,7 @@ jobs:
       run: |
         sudo apt install -y \
               black \
+              codespell \
               pycodestyle \
               pylint \
               python3-mypy

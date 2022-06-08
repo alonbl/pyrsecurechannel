@@ -11,6 +11,7 @@ die() {
 MODULES="pyrsecurechannel pyrloopclient"
 
 black . || die "black"
+codespell --ignore-words=.codespell-ignore-words --skip "*.crt,*.pem,*.req,openssl-easyrsa.cnf,*_cache" || die "codespell"
 pycodestyle . || die "pycodestyle"
 pylint ${MODULES} || die "pylint"
 python3 -m mypy ${MODULES} || die "mypy"
